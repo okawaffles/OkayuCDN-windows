@@ -7,6 +7,22 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
+    <!-- The decoration at the top showing the logo and eventually your username -->
+    <div class="topbar">
+        <div class="topbar-item">
+            <!-- logo, remember it should be shifted offscreen too -->
+            <img src="https://okayu.okawaffles.com/assets/images/logo.png alt="OkayuCDN">
+        </div>
+        <div class="topbar-item">
+            <!-- username with storage info -->
+            <h2 id="topbar-username">Logging in...</h2>
+            <h4 id="topbar-storage">0GB / 0GB</h4>
+        </div>
+        <div class="topbar-item">
+            <!-- something else?? just filler for now -->
+        </div>
+    </div>
+
     <h3 id="infostring">Please wait...</h3>
 
     <!-- Upload pane area -->
@@ -88,6 +104,8 @@
         font-weight: 500;
         text-align: center;
     }
+
+    /* topbar styles we want to have the same color as primary and have them offscreen a bit, with decoration around the edges. */
 </style>
 
 </html>
