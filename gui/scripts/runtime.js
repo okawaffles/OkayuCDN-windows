@@ -72,16 +72,7 @@ function updateProgressBar() {
 }
 
 function UploadFile() {
-    const chosen_filename = document.getElementById('filename').value;
-    const config = cfg.get();
-    const file = system.getFileData(global_filename);
-    let req = new XMLHttpRequest();
-    req.upload.addEventListener("progress", updateProgressBar);
-    req.open('POST', config.app.server+config.app.upload_path);
-    req.setRequestHeader('Authorization', `${config.user.token}`);
-    let form = new FormData();
-    form.append("file" + file, new Blob([file], {type:'application/octet-stream'}), global_filename + "." + global_filename.split('.').at(-1));
-    let endFileName = chosen_filename + "." + global_filename.split('.').at(-1);
-
-    req.send(form);
+    document.getElementById('uploader').style.display = "none";
+    infostring.innerText = "Your file is uploading...";
+    
 }
