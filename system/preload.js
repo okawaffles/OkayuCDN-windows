@@ -35,5 +35,5 @@ contextBridge.exposeInMainWorld('system', {
     },
     error: (text) => ipcRenderer.invoke('createError', text.toString()),
     exit: () => ipcRenderer.invoke('exit'),
-    getFileData: (path) => { return fs.readFileSync(path); }
+    uploadFile: (path, file) => { ipcRenderer.invoke('uploadFile', path, file); }
 })

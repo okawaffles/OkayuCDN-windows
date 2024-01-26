@@ -9,10 +9,12 @@ function RunAuthentication() {
             if (response.status != 200) {
                 infostring.innerText = `Failed to authenticate: ${response.data.reason}`;
                 document.getElementById('login').style.display = 'flex';
+                document.getElementById('topbar-username').innerText = "Signed out";
                 return;
             }
 
             infostring.innerText = `Logged in as ${config.user.username}`;
+            document.getElementById('topbar-username').innerText = config.user.username;
             // UPLOADER STARTS HERE!
             document.getElementById('uploader').style.display = "flex";
             let sys_filename = await system.filename();
@@ -32,10 +34,13 @@ function RunAuthentication() {
             console.log(err);
             infostring.innerText = `Failed to authenticate: ${err.response.data.reason}`;
             document.getElementById('login').style.display = 'flex';
+            document.getElementById('topbar-username').innerText = "Signed out";
         });
 }
 
 window.onload = function() {
+    let config = cfg.get();
+    document.getElementById('server').innerText = config.app.server;
     RunAuthentication();
 }
 
@@ -54,6 +59,7 @@ function InitLoginProcess() {
             if (response.status != 200) {
                 infostring.innerText = `Failed to log in: ${response.data.reason}`;
                 document.getElementById('login').style.display = 'flex';
+                document.getElementById('topbar-username').innerText = "Signed out";
                 return;
             }
 
@@ -63,6 +69,7 @@ function InitLoginProcess() {
         .catch((err) => {
             infostring.innerText = `Failed to log in: ${err.response.data.reason}`;
             document.getElementById('login').style.display = 'flex';
+            document.getElementById('topbar-username').innerText = "Signed out";
             return;
         });
 }
@@ -75,4 +82,5 @@ function UploadFile() {
     document.getElementById('uploader').style.display = "none";
     infostring.innerText = "Your file is uploading...";
     
+    system.uploadFile(global_filename, document.getElementById('filename').value);
 }

@@ -8,17 +8,18 @@
 </head>
 <body>
     <!-- The decoration at the top showing the logo and eventually your username -->
-    <div class="topbar">
-        <div class="topbar-item">
+    <div class="topbar" id="topbar">
+        <div class="topbar-item" id="logo">
             <!-- logo, remember it should be shifted offscreen too -->
-            <img src="https://okayu.okawaffles.com/assets/images/logo.png alt="OkayuCDN">
+            <img src="https://okayu.okawaffles.com/assets/images/logo.png" alt="OkayuCDN">
+            <p id="server">Connecting...</p>
         </div>
-        <div class="topbar-item">
+        <div class="topbar-item" id="userinfo">
             <!-- username with storage info -->
             <h2 id="topbar-username">Logging in...</h2>
             <h4 id="topbar-storage">0GB / 0GB</h4>
         </div>
-        <div class="topbar-item">
+        <div class="topbar-item nofill">
             <!-- something else?? just filler for now -->
         </div>
     </div>
@@ -64,8 +65,12 @@
         background-color: #24252A;
         overflow: hidden;
     }
-    #infostring {
+    #infostring, #file {
         text-align: center;
+        margin: 5px;
+    }
+    #file {
+        font-size: small;
     }
     .uploader, .login {
         /* changed when ready to upload/log in: */
@@ -94,7 +99,7 @@
         background-color: rgba(0, 136, 169, 0.8);
     }
     .input {
-        margin: 0 0 10px;
+        margin: 10px 0 10px;
         width: 250px;
         height: 30px;
         border-radius: 10px;
@@ -106,6 +111,54 @@
     }
 
     /* topbar styles we want to have the same color as primary and have them offscreen a bit, with decoration around the edges. */
+    .topbar {
+        display: flex;
+        justify-content: center;
+        align-items: start;
+        padding: 0px;
+    }
+    .topbar-item {
+        width: 50%;
+        height: 75px;
+        background-color: rgba(0, 136, 169, 1);
+        margin: 10px;
+        padding: 0px;
+        border-radius: 16px;
+        border: 2px dashed white;
+    }
+    .nofill {
+        background-color: #00000000;
+        margin-top: 0px;
+        border: none;
+    }
+    .topbar-item img {
+        width: 95%;
+        margin-top: 3px;
+    }
+    #server {
+        margin-top: 0px;
+        font-size: small;
+    }
+    #logo {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        margin-top: 0px;
+    }
+    #topbar-username, #topbar-storage {
+        width: 100%;
+        padding: 0px;
+        margin: 0px;
+    }
+    #userinfo {
+        margin: 0px 20px;
+        text-align: center;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+    }
 </style>
 
 </html>
