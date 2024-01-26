@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OkayuCDN Desktop</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h3 id="infostring">Please wait...</h3>
+
+    <!-- Upload pane area -->
+    <div class="uploader" id="uploader">
+        <h3 id="file">You're uploading: </h3>
+        <div class="item">
+            <input type="text" name="filename" id="filename" class="input" placeholder="Name Your File!">
+        </div>
+        <div class="item">
+            <button class="submit" id="submit" onclick="UploadFile()">Upload</button>
+        </div>
+    </div>
+
+    <!-- Login pane area -->
+    <div class="login" id="login">
+        <div class="item">
+            <input type="text" name="username" id="username" class="input" placeholder="Username">
+            <input type="password" name="password" id="password" class="input" placeholder="Password">
+        </div>
+        <div class="item">
+            <button class="submit" id="submit" onclick="InitLoginProcess()">Let's go!</button>
+        </div>
+    </div>
+
+
+    <script src="./scripts/runtime.js"></script>
+</body>
+
+<style>
+    @font-face {
+        font-family: GenJyuuGothic;
+        src: url("https://okayu.okawaffles.com/assets/fonts/GenJyuuGothic.ttf");
+    }
+    * {
+        font-family: GenJyuuGothic;
+    }
+    body {
+        color: white;
+        background-color: #24252A;
+        overflow: hidden;
+    }
+    #infostring {
+        text-align: center;
+    }
+    .uploader, .login {
+        /* changed when ready to upload/log in: */
+        display: none;
+
+        text-align: center;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+    }
+    .item {
+        width: 100%;
+    }
+    .submit {
+        padding: 9px 25px;
+        background-color: rgba(0, 136, 169, 1);
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease 0s;
+        color: white;
+        font-size: 18px;
+        width: 250px;
+    }
+    .submit:hover {
+        background-color: rgba(0, 136, 169, 0.8);
+    }
+    .input {
+        margin: 0 0 10px;
+        width: 250px;
+        height: 30px;
+        border-radius: 10px;
+        background-color: white;
+        border: none;
+        color: black;
+        font-weight: 500;
+        text-align: center;
+    }
+</style>
+
+</html>
