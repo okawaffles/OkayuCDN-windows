@@ -1,5 +1,19 @@
 let global_filename = "";
 
+function formatSize(size) {
+    let fsize = "";
+    if (size > 750*1024*1024)
+        fsize = (((size / 1024) / 1024) / 1024).toFixed(2) + "GB";
+    else if (size > 750*1024)
+        fsize = ((size / 1024) / 1024).toFixed(2) + "MB";
+    else if (size > 1024)
+        fsize = (size / 1024).toFixed(2) + "KB";
+    else
+        fsize = `${size}B`;
+
+    return fsize;
+}
+
 function RunAuthentication() {
     let config = cfg.get();
     const infostring = document.getElementById('infostring');
@@ -15,6 +29,15 @@ function RunAuthentication() {
 
             infostring.innerText = `Logged in as ${config.user.username}`;
             document.getElementById('topbar-username').innerText = config.user.username;
+
+            // get user storage
+            axios.get(config.app.server+'/api/qus?user='+config.user.username).then((r) => {
+                let used = formatSize(r.data.size);
+                let avail = formatSize(r.data.userTS);
+                document.getElementById('topbar-storage').innerText = `${used} / ${avail}`;
+            });
+
+
             // UPLOADER STARTS HERE!
             document.getElementById('uploader').style.display = "flex";
             let sys_filename = await system.filename();
@@ -32,9 +55,16 @@ function RunAuthentication() {
         })
         .catch((err) => {
             console.log(err);
+            if (!err.response) {
+                infostring.innerText = `Failed to connect to central server. Please check your configuration, and make sure OkayuCDN is up.`;
+                document.getElementById('topbar-username').innerText = "Signed out";
+                document.getElementById('topbar-storage').innerText = 'No storage info';
+                return;
+            }
             infostring.innerText = `Failed to authenticate: ${err.response.data.reason}`;
             document.getElementById('login').style.display = 'flex';
             document.getElementById('topbar-username').innerText = "Signed out";
+            document.getElementById('topbar-storage').innerText = 'No storage info';
         });
 }
 
@@ -83,4 +113,23 @@ function UploadFile() {
     infostring.innerText = "Your file is uploading...";
     
     system.uploadFile(global_filename, document.getElementById('filename').value);
+    setTimeout(() => {
+        CheckUploadCompletion();
+    }, 2500);
+}
+
+async function CheckUploadCompletion() {
+    let result = await system.checkFinished();
+    console.log(result);
+    if (result.isFinished) {
+        if (result.success) {
+            infostring.innerText = `File upload success! Your file is uploaded at:`;
+            document.getElementById('link').innerText = result.link;
+            document.getElementById('link').style.display = 'flex';
+        }
+    } else {
+        setTimeout(() => {
+            CheckUploadCompletion();
+        }, 2500);
+    }
 }

@@ -13,14 +13,34 @@ const createWindow = () => {
         sandbox: false
       },
       autoHideMenuBar: true,
+      resizable: false
     })
 
     win.loadFile(path.join(__dirname, 'gui', 'main.html'))
 }
 
+const BUNDLED_DEFAULT_CONFIGURATION = {
+    version: 1,
+    app: {
+        version: "1.0.0",
+        server: "https://okayu.okawaffles.com",
+        upload_path: "/api/desktop/upload",
+    },
+    user: {
+        username: "",
+        token: ""
+    }
+}
+
+let uploadIsFinished = false;
+let uploadSuccess = false;
+let uploadedLink = '';
+
 function UploadHandler(_event, filepath, filename) {
     console.log('get config ...');
-    const config = JSON.parse(fs.readFileSync('okayu_conf.json'));
+    const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
+
+    let link = `${config.app.server}/content/${config.user.username}/`;
 
     console.log('check if file exists ...');
     if (!fs.existsSync(filepath)) {
@@ -42,18 +62,28 @@ function UploadHandler(_event, filepath, filename) {
     }, (err, resp, body) => {
         if (err) {
             dialog.showErrorBox('Oh nyao!', 'Something went wrong internally, sorry!');
+            uploadIsFinished = true;
+            uploadSuccess = false;
             process.exit();
         }
     }).on('complete', () => {
         console.log('upload complete!');
+        uploadSuccess = true;
+        uploadIsFinished = true;
     });
 
     console.log('appending file ...')
 
     let form = req.form();
+    let file_ext = ".FILE";
+    if (filepath.includes('.')) {
+        file_ext = '.' + filepath.split('.').at(-1);
+    }
     form.append('file', dataStream, {
-        filename: filename,
+        filename: filename + file_ext,
     });
+
+    uploadedLink = link + filename + file_ext;
 
     console.log('done');
 }
@@ -67,6 +97,12 @@ app.whenReady().then(() => {
     });
     ipcMain.handle('exit', () => {process.exit()});
     ipcMain.handle('uploadFile', UploadHandler);
+    ipcMain.handle('checkFinished', () => {return {isFinished:uploadIsFinished, success:uploadSuccess, link:uploadedLink}});
 
-    createWindow()
+    if (!fs.existsSync(path.join(__dirname, 'okayu_conf.json'))) {
+        // write default configuration
+        fs.writeFileSync(path.join(__dirname, 'okayu_conf.json'), JSON.stringify(BUNDLED_DEFAULT_CONFIGURATION));
+    }
+
+    createWindow();
 })

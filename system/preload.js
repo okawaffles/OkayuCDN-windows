@@ -35,5 +35,6 @@ contextBridge.exposeInMainWorld('system', {
     },
     error: (text) => ipcRenderer.invoke('createError', text.toString()),
     exit: () => ipcRenderer.invoke('exit'),
-    uploadFile: (path, file) => { ipcRenderer.invoke('uploadFile', path, file); }
+    uploadFile: (path, file) => { ipcRenderer.invoke('uploadFile', path, file); },
+    checkFinished: () => ipcRenderer.invoke('checkFinished'),
 })

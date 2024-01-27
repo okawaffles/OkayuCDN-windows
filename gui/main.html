@@ -29,6 +29,7 @@
     <!-- Upload pane area -->
     <div class="uploader" id="uploader">
         <h3 id="file">You're uploading: </h3>
+        <p id="link"></p>
         <div class="item">
             <input type="text" name="filename" id="filename" class="input" placeholder="Name Your File!">
         </div>
@@ -71,6 +72,9 @@
     }
     #file {
         font-size: small;
+    }
+    #link {
+        display: none;
     }
     .uploader, .login {
         /* changed when ready to upload/log in: */
@@ -137,7 +141,7 @@
     }
     #server {
         margin-top: 0px;
-        font-size: small;
+        font-size: x-small;
     }
     #logo {
         display: flex;
