@@ -1,3 +1,4 @@
 node_modules/
 package-lock.json
 okayu_conf.json
+out/

@@ -19,8 +19,10 @@
             <h2 id="topbar-username">Logging in...</h2>
             <h4 id="topbar-storage">0GB / 0GB</h4>
         </div>
-        <div class="topbar-item nofill">
+        <div class="topbar-item" id="topbar-appinfo">
             <!-- something else?? just filler for now -->
+            <h3 id="topbar-app">OkayuCDN Desktop</h3>
+            <h5 id="topbar-version">Version 2.0.0</h5>
         </div>
     </div>
 
@@ -34,21 +36,15 @@
             <input type="text" name="filename" id="filename" class="input" placeholder="Name Your File!">
         </div>
         <div class="item">
+            <div id="div_private">
+                <input type="checkbox" class="private_toggle" id="private_toggle" />
+                <p>Upload this file as private</p>
+            </div>
+        </div>
+        <div class="item">
             <button class="submit" id="submit" onclick="UploadFile()">Upload</button>
         </div>
     </div>
-
-    <!-- Login pane area -->
-    <div class="login" id="login">
-        <div class="item">
-            <input type="text" name="username" id="username" class="input" placeholder="Username">
-            <input type="password" name="password" id="password" class="input" placeholder="Password">
-        </div>
-        <div class="item">
-            <button class="submit" id="submit" onclick="InitLoginProcess()">Let's go!</button>
-        </div>
-    </div>
-
 
     <script src="./scripts/runtime.js"></script>
 </body>
@@ -87,6 +83,12 @@
     }
     .item {
         width: 100%;
+    }
+    #div_private {
+        display: flex; justify-content: center;
+    }
+    .private_toggle {
+        margin: 0em 1em
     }
     .submit {
         padding: 9px 25px;
@@ -129,6 +131,10 @@
         padding: 0px;
         border-radius: 16px;
         border: 2px dashed white;
+        text-align: center;
+    }
+    #topbar-appinfo {
+        margin-top: 0px;
     }
     .nofill {
         background-color: #00000000;
@@ -150,7 +156,7 @@
         align-items: center;
         margin-top: 0px;
     }
-    #topbar-username, #topbar-storage {
+    #topbar-username, #topbar-storage, #topbar-app, #topbar-version {
         width: 100%;
         padding: 0px;
         margin: 0px;

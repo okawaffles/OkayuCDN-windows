@@ -2,39 +2,31 @@ const { contextBridge, ipcRenderer } = require('electron/renderer')
 const fs = require('node:fs');
 const path = require('node:path');
 
+const token_beamed = new Event('token_beamed');
 
 contextBridge.exposeInMainWorld('cfg', {
     get: () => {
         // load configuration
-        const configuration = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'okayu_conf.json')));
-        return configuration;
+        return ipcRenderer.invoke('getConfig');
     },
     setNewLogin: (username, token) => {
         // load configuration
-        const config = JSON.parse(fs.readFileSync(path.join(__dirname, '../', 'okayu_conf.json')));
-        const newConfig = {
-            "version":config.version,
-            "app":{
-                "version":config.app.version,
-                "server":config.app.server,
-                "upload_path":config.app.upload_path
-            },
-            "user":{
-                "username":username,
-                "token":token
-            }
-        };
-        fs.writeFileSync(path.join(__dirname, '../', 'okayu_conf.json'), JSON.stringify(newConfig));
+        ipcRenderer.invoke('setNewConfig', username, token);
     }
 })
 
 contextBridge.exposeInMainWorld('system', {
-    filename: () => ipcRenderer.invoke('getFileName'),
+    filename: () => { return ipcRenderer.invoke('getFileName') },
     checkFile: (path) => {
-        return fs.existsSync(path);
+        return fs.existsSync(path) && fs.statSync(path).isFile();
     },
     error: (text) => ipcRenderer.invoke('createError', text.toString()),
     exit: () => ipcRenderer.invoke('exit'),
-    uploadFile: (path, file) => { ipcRenderer.invoke('uploadFile', path, file); },
+    uploadFile: (path, file, extension, isPrivate) => { ipcRenderer.invoke('uploadFile', path, file, extension, isPrivate); },
     checkFinished: () => ipcRenderer.invoke('checkFinished'),
+    openLogin: () => ipcRenderer.invoke('openLogin'),
 })
+
+ipcRenderer.on('token-beamed', (ev, token) => {
+    document.dispatchEvent(token_beamed);
+});

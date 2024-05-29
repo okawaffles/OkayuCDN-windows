@@ -14,27 +14,49 @@ function formatSize(size) {
     return fsize;
 }
 
-function RunAuthentication() {
-    let config = cfg.get();
+// half-assed jquery replacement
+const $ = (v) => document.querySelector(v);
+
+async function RunAuthentication() {
+    let config = await cfg.get();
+    console.log(config)
     const infostring = document.getElementById('infostring');
 
-    axios.post(config.app.server+'/api/desktop/token?token='+config.user.token)
+    // whoami is essentially a route to ensure you're logged in
+    axios.get(config.app.server+'/api/desktop/whoami', {
+        headers: {
+            'Authorization': config.user.token
+        }
+    })
         .then(async (response) => {
             if (response.status != 200) {
-                infostring.innerText = `Failed to authenticate: ${response.data.reason}`;
-                document.getElementById('login').style.display = 'flex';
+                infostring.innerText = `Failed to log in: ${response.data.reason}. Please log in with your browser.`;
                 document.getElementById('topbar-username').innerText = "Signed out";
+
+                document.addEventListener('token_beamed', (e) => {
+                    RunAuthentication();
+                });
+
                 return;
             }
 
-            infostring.innerText = `Logged in as ${config.user.username}`;
+            cfg.setNewLogin(response.data.username, config.user.token);
+            infostring.innerText = `Logged in as ${response.data.username}`;
             document.getElementById('topbar-username').innerText = config.user.username;
 
             // get user storage
-            axios.get(config.app.server+'/api/qus?user='+config.user.username).then((r) => {
-                let used = formatSize(r.data.size);
-                let avail = formatSize(r.data.userTS);
+            axios.get(config.app.server+'/api/desktop/storage', {
+                headers: {
+                    'Authorization': config.user.token
+                }
+            }).then((result) => {
+                let used = formatSize(result.data.used);
+                let avail = formatSize(result.data.total);
                 document.getElementById('topbar-storage').innerText = `${used} / ${avail}`;
+            }).catch(err => {
+                console.log(err);
+                system.error('An internal error occurred and the software must close.');
+                system.exit();
             });
 
 
@@ -43,65 +65,42 @@ function RunAuthentication() {
             let sys_filename = await system.filename();
             global_filename = sys_filename;
             document.getElementById('file').innerText = `You're uploading: ${sys_filename}`;
-            if (sys_filename == "undefined") {
-                system.error('You need to right click and choose "Upload with OkayuCDN" to use this app!');
+            if (sys_filename == undefined) {
+                system.error('You need to right click a file and choose "Upload with OkayuCDN" to use this app!');
                 system.exit();
             }
             
             if (!system.checkFile(sys_filename)) {
-                system.error('File does not exist, exiting!');
+                system.error(`That's not a file, silly!`);
                 system.exit();
             }
         })
         .catch((err) => {
             console.log(err);
             if (!err.response) {
-                infostring.innerText = `Failed to connect to central server. Please check your configuration, and make sure OkayuCDN is up.`;
+                infostring.innerText = `Failed to connect to the OkayuCDN instance. Please check your configuration, and make sure the instance is online.`;
                 document.getElementById('topbar-username').innerText = "Signed out";
                 document.getElementById('topbar-storage').innerText = 'No storage info';
                 return;
             }
-            infostring.innerText = `Failed to authenticate: ${err.response.data.reason}`;
-            document.getElementById('login').style.display = 'flex';
+            infostring.innerText = `Failed to log in. Please log in with your browser.`;
             document.getElementById('topbar-username').innerText = "Signed out";
-            document.getElementById('topbar-storage').innerText = 'No storage info';
-        });
-}
 
-window.onload = function() {
-    let config = cfg.get();
-    document.getElementById('server').innerText = config.app.server;
-    RunAuthentication();
-}
+            system.openLogin();
 
-function InitLoginProcess() {
-    document.getElementById('login').style.display = 'none';
-    const infostring = document.getElementById('infostring');
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+            document.addEventListener('token_beamed', (e) => {
+                RunAuthentication();
+            });
 
-    infostring.innerText = "Logging in, please wait...";
-
-    let config = cfg.get();
-
-    axios.post(config.app.server+`/api/desktop/authenticate?username=${username}&password=${password}`)
-        .then((response) => {
-            if (response.status != 200) {
-                infostring.innerText = `Failed to log in: ${response.data.reason}`;
-                document.getElementById('login').style.display = 'flex';
-                document.getElementById('topbar-username').innerText = "Signed out";
-                return;
-            }
-
-            cfg.setNewLogin(username, response.data.token);
-            RunAuthentication();
-        })
-        .catch((err) => {
-            infostring.innerText = `Failed to log in: ${err.response.data.reason}`;
-            document.getElementById('login').style.display = 'flex';
-            document.getElementById('topbar-username').innerText = "Signed out";
             return;
         });
+}
+
+window.onload = async function() {
+    let config = await cfg.get();
+    console.log(config);
+    document.getElementById('server').innerText = config.app.server;
+    RunAuthentication();
 }
 
 function updateProgressBar() {
@@ -109,13 +108,18 @@ function updateProgressBar() {
 }
 
 function UploadFile() {
+    const regex = new RegExp('^[A-Za-z0-9_-]+$');
+    if (!regex.test($('#filename').value) || $('#filename').value.length > 25) return system.error('You may only use alphanumeric characters and underscores in your file names, as well as only up to 25 characters.');
+
     document.getElementById('uploader').style.display = "none";
     infostring.innerText = "Your file is uploading...";
     
-    system.uploadFile(global_filename, document.getElementById('filename').value);
-    setTimeout(() => {
-        CheckUploadCompletion();
-    }, 2500);
+    let extension = 'FILE';
+    if (global_filename.split('.').length > 1) {
+        extension = global_filename.split('.').at(-1);
+    }
+
+    system.uploadFile(global_filename, document.getElementById('filename').value, extension, $('#private_toggle').checked);
 }
 
 async function CheckUploadCompletion() {
