@@ -12,7 +12,7 @@ contextBridge.exposeInMainWorld('cfg', {
     setNewLogin: (username, token) => {
         // load configuration
         ipcRenderer.invoke('setNewConfig', username, token);
-    }
+    },
 })
 
 contextBridge.exposeInMainWorld('system', {
@@ -25,8 +25,19 @@ contextBridge.exposeInMainWorld('system', {
     uploadFile: (path, file, extension, isPrivate) => { ipcRenderer.invoke('uploadFile', path, file, extension, isPrivate); },
     checkFinished: () => ipcRenderer.invoke('checkFinished'),
     openLogin: () => ipcRenderer.invoke('openLogin'),
+    openOnline: (link) => ipcRenderer.invoke('openOnline', link),
 })
 
 ipcRenderer.on('token-beamed', (ev, token) => {
     document.dispatchEvent(token_beamed);
+});
+
+ipcRenderer.on('file-success', (ev, link) => {
+    const file_success = new CustomEvent('file_success', {
+        detail: {
+            link
+        }
+    });
+    
+    document.dispatchEvent(file_success);
 });

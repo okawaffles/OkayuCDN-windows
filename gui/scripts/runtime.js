@@ -107,6 +107,8 @@ function updateProgressBar() {
     // ...
 }
 
+let link = '';
+
 function UploadFile() {
     const regex = new RegExp('^[A-Za-z0-9_-]+$');
     if (!regex.test($('#filename').value) || $('#filename').value.length > 25) return system.error('You may only use alphanumeric characters and underscores in your file names, as well as only up to 25 characters.');
@@ -122,18 +124,14 @@ function UploadFile() {
     system.uploadFile(global_filename, document.getElementById('filename').value, extension, $('#private_toggle').checked);
 }
 
-async function CheckUploadCompletion() {
-    let result = await system.checkFinished();
-    console.log(result);
-    if (result.isFinished) {
-        if (result.success) {
-            infostring.innerText = `File upload success! Your file is uploaded at:`;
-            document.getElementById('link').innerText = result.link;
-            document.getElementById('link').style.display = 'flex';
-        }
-    } else {
-        setTimeout(() => {
-            CheckUploadCompletion();
-        }, 2500);
-    }
+function ViewOnline() {
+    system.openOnline(link);
 }
+
+document.addEventListener('file_success', (event) => {
+    infostring.innerText = `File upload success! Your file is uploaded at:`;
+    link = event.detail.link.link;
+    console.log(link);
+    $('#link').innerText = link;
+    $('#finished').style.display = 'flex';
+});

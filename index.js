@@ -1,8 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, shell, session } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
-const axios = require('axios');
-const { LocalFileData, constructFileFromLocalFileData } = require('get-file-object-from-local-path');
+var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 if (process.defaultApp) {
     if (process.argv.length >= 2) {
@@ -46,70 +45,76 @@ let uploadIsFinished = false;
 let uploadSuccess = false;
 let uploadedLink = '';
 
-async function StartFileUpload(_event, filepath, filename, extension, isPrivate) {
+async function StartFileUpload(_event, filePath, filename, extension, isPrivate) {
     const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
 
-    uploadInProgress = true;
-
-    // see here
-    // https://stackoverflow.com/questions/71074049/upload-large-files-in-chunks-using-nodejs
-
-    const fileData = new LocalFileData(filepath);
-    const file = constructFileFromLocalFileData(fileData);
-    console.log(file);
-    const chunk_size = 1024*1024*5; // 5MB chunks
-    const total_chunks = Math.ceil(file.size / chunk_size);
+    const chunk_size = 1024 * 1024 * 5; // 5MB chunks
+    const fileBuffer = fs.readFileSync(filePath);
+    const total_chunks = Math.ceil(fileBuffer.length / chunk_size);
     let start_byte = 0;
-    for (let i = 0; i <= total_chunks; i++) {
-        const end_byte = Math.min(start_byte + chunk_size, file.size);
-        const chunk = file.slice(start_byte, end_byte);
-        console.debug('sending chunk...');
-        await sendChunk(chunk, total_chunks, i);
-        start_byte += chunk_size;
-        
-        // change progress bar based on current progress
-        //$('#progress').css('width', `${(i / total_chunks)*100}%`);
-    }
 
-    console.log(filename, extension)
+    for (let i = 0; i < total_chunks; i++) {
+        const end_byte = Math.min(start_byte + chunk_size, fileBuffer.length);
+        const chunk = fileBuffer.slice(start_byte, end_byte);
+
+        console.debug('sending chunk...');
+        await sendChunk(config.app.server, chunk, total_chunks, i);
+        start_byte += chunk_size;
+
+        // implement progress feedback in the Electron renderer process if needed
+    }
 
     const formData = new FormData();
     formData.append('filename', filename);
     formData.append('extension', extension);
-    formData.append('isPrivate', isPrivate);
     formData.append('chunk_count', total_chunks);
+    formData.append('isPrivate', isPrivate);
+    console.log(filename, extension, total_chunks, isPrivate);
 
-    const response = await fetch(`${config.app.server}/api/upload/finish`, {
-        method: 'POST',
-        body: formData,
+    const axios = require('axios');
+
+    axios.post(`${config.app.server}/api/upload/finish`, {
+        filename,
+        extension,
+        chunk_count: total_chunks,
+        isPrivate,
+    }, {
         headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest',
             'Cookie': `token=${config.user.token};`
         }
-    });
-
-    if (response.ok) {
-        win.webContents.send('file-success', {link: `${config.app.server}/@${config.user.username}/${filename}.${extension}`});
-    }
+    })
+        .then((response) => {
+            if (response.status === 200) {
+                win.webContents.send('file-success', { link: `${config.app.server}/@${config.user.username}/${filename}.${extension}` });
+            } else {
+                console.log('Failed to finish file upload.');
+            }
+        })
+        .catch((error) => {
+            console.log(`Failed to finish file upload. ${error}`);
+        });
 }
 
-async function sendChunk(chunk, total_chunks, current_chunk) {
+async function sendChunk(server, chunk, total_chunks, current_chunk) {
     const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
 
     const formData = new FormData();
-    formData.append('file', chunk);
+    formData.append('file', new Blob([chunk]), `chunk_${current_chunk}`);
     formData.append('totalChunks', total_chunks);
     formData.append('currentChunk', current_chunk);
-    const response = await fetch(`${config.app.server}/api/upload?current_chunk=`+current_chunk, {
+
+    const response = await fetch(`${server}/api/upload?current_chunk=${current_chunk}`, {
         method: 'POST',
-        body: formData,
         headers: {
             'Cookie': `token=${config.user.token};`
-        }
+        },
+        body: formData
     });
+
     if (!response.ok) {
-        dialog.showErrorBox('An error occurred while uploading your file.');
-        uploadInProgress = false;
-        process.exit();
+        throw new Error(`Upload failed: chunk ${current_chunk} of ${total_chunks} failed`);
     }
 }
 
@@ -132,6 +137,9 @@ if (!gotTheLock) {
         ipcMain.handle('openLogin', () => {
             const configuration = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
             if (permitLoginLaunch) { shell.openExternal(configuration.app.server + '/beam'); permitLoginLaunch = false }
+        });
+        ipcMain.handle('openOnline', (_e, link) => {
+            shell.openExternal(link);
         });
         ipcMain.handle('getConfig', () => {
             const configuration = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
