@@ -32,12 +32,13 @@ ipcRenderer.on('token-beamed', (ev, token) => {
     document.dispatchEvent(token_beamed);
 });
 
-ipcRenderer.on('file-success', (ev, link) => {
+ipcRenderer.on('file-success', (ev, link, viewlink) => {
     const file_success = new CustomEvent('file_success', {
         detail: {
-            link
+            link,
+            viewlink
         }
     });
-    
+
     document.dispatchEvent(file_success);
 });

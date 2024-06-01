@@ -87,7 +87,10 @@ async function StartFileUpload(_event, filePath, filename, extension, isPrivate)
     })
         .then((response) => {
             if (response.status === 200) {
-                win.webContents.send('file-success', { link: `${config.app.server}/@${config.user.username}/${filename}.${extension}` });
+                win.webContents.send('file-success', { 
+                    link: `${config.app.server}/@${config.user.username}/${filename}.${extension}`,
+                    viewlink: `${config.app.server}/view/@${config.user.username}/${filename}.${extension}`
+                });
             } else {
                 console.log('Failed to finish file upload.');
             }

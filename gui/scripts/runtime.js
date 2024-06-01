@@ -42,9 +42,10 @@ async function RunAuthentication() {
 
             cfg.setNewLogin(response.data.username, config.user.token);
             infostring.innerText = `Logged in as ${response.data.username}`;
-            document.getElementById('topbar-username').innerText = config.user.username;
+            document.getElementById('topbar-username').innerText = response.data.username;
 
             // get user storage
+            config = await cfg.get();
             axios.get(config.app.server+'/api/desktop/storage', {
                 headers: {
                     'Authorization': config.user.token
@@ -108,6 +109,7 @@ function updateProgressBar() {
 }
 
 let link = '';
+let viewlink = '';
 
 function UploadFile() {
     const regex = new RegExp('^[A-Za-z0-9_-]+$');
@@ -125,12 +127,13 @@ function UploadFile() {
 }
 
 function ViewOnline() {
-    system.openOnline(link);
+    system.openOnline(viewlink);
 }
 
 document.addEventListener('file_success', (event) => {
     infostring.innerText = `File upload success! Your file is uploaded at:`;
     link = event.detail.link.link;
+    viewlink = event.detail.link.viewlink;
     console.log(link);
     $('#link').innerText = link;
     $('#finished').style.display = 'flex';
