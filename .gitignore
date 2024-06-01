@@ -2,3 +2,8 @@ node_modules/
 package-lock.json
 okayu_conf.json
 out/
+build/win-unpacked
+build/*.yml
+build/*.yaml
+build/*.exe
+build/*.blockmap

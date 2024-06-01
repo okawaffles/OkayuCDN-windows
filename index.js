@@ -1,7 +1,8 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, shell, session } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
-var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+
+console.log("com.okayucdn.desktop");
 
 if (process.defaultApp) {
     if (process.argv.length >= 2) {
@@ -41,12 +42,18 @@ const BUNDLED_DEFAULT_CONFIGURATION = {
     }
 }
 
+const CONFIG_PATH = (process.argv[0] == "electron-forge")?path.join(__dirname, 'okayu_conf.json'):path.join(__dirname, '../', 'okayu_conf.json');
+
+if (!fs.existsSync(CONFIG_PATH) && process.argv[0] != "electron-forge") {
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(BUNDLED_DEFAULT_CONFIGURATION), 'utf-8');
+}
+
 let uploadIsFinished = false;
 let uploadSuccess = false;
 let uploadedLink = '';
 
 async function StartFileUpload(_event, filePath, filename, extension, isPrivate) {
-    const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
+    const config = JSON.parse(fs.readFileSync(CONFIG_PATH));
 
     const chunk_size = 1024 * 1024 * 5; // 5MB chunks
     const fileBuffer = fs.readFileSync(filePath);
@@ -101,7 +108,7 @@ async function StartFileUpload(_event, filePath, filename, extension, isPrivate)
 }
 
 async function sendChunk(server, chunk, total_chunks, current_chunk) {
-    const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
+    const config = JSON.parse(fs.readFileSync(CONFIG_PATH));
 
     const formData = new FormData();
     formData.append('file', new Blob([chunk]), `chunk_${current_chunk}`);
@@ -138,18 +145,18 @@ if (!gotTheLock) {
         ipcMain.handle('uploadFile', StartFileUpload);
         ipcMain.handle('checkFinished', () => { return { isFinished: uploadIsFinished, success: uploadSuccess, link: uploadedLink } });
         ipcMain.handle('openLogin', () => {
-            const configuration = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
+            const configuration = JSON.parse(fs.readFileSync(CONFIG_PATH));
             if (permitLoginLaunch) { shell.openExternal(configuration.app.server + '/beam'); permitLoginLaunch = false }
         });
         ipcMain.handle('openOnline', (_e, link) => {
             shell.openExternal(link);
         });
         ipcMain.handle('getConfig', () => {
-            const configuration = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
+            const configuration = JSON.parse(fs.readFileSync(CONFIG_PATH));
             return configuration;
         });
         ipcMain.handle('setNewConfig', (_e, username, token) => {
-            const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
+            const config = JSON.parse(fs.readFileSync(CONFIG_PATH));
             const newConfig = {
                 "version": config.version,
                 "app": {
@@ -162,12 +169,12 @@ if (!gotTheLock) {
                     "token": token
                 }
             };
-            fs.writeFileSync(path.join(__dirname, 'okayu_conf.json'), JSON.stringify(newConfig));
+            fs.writeFileSync(CONFIG_PATH, JSON.stringify(newConfig));
         })
 
-        if (!fs.existsSync(path.join(__dirname, 'okayu_conf.json'))) {
+        if (!fs.existsSync(CONFIG_PATH)) {
             // write default configuration
-            fs.writeFileSync(path.join(__dirname, 'okayu_conf.json'), JSON.stringify(BUNDLED_DEFAULT_CONFIGURATION));
+            fs.writeFileSync(CONFIG_PATH, JSON.stringify(BUNDLED_DEFAULT_CONFIGURATION));
         }
 
         app.on('second-instance', (event, commandLine, workingDirectory) => {
@@ -182,7 +189,7 @@ if (!gotTheLock) {
             if (command.startsWith('okayucdn://token/')) {
                 const token = command.slice('okayucdn://token/'.length);
 
-                const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'okayu_conf.json')));
+                const config = JSON.parse(fs.readFileSync(CONFIG_PATH));
                 const newConfig = {
                     "version": config.version,
                     "app": {
@@ -195,7 +202,7 @@ if (!gotTheLock) {
                         "token": token
                     }
                 };
-                fs.writeFileSync(path.join(__dirname, 'okayu_conf.json'), JSON.stringify(newConfig));
+                fs.writeFileSync(CONFIG_PATH, JSON.stringify(newConfig));
                 win.webContents.send('token-beamed', { token });
             }
         })

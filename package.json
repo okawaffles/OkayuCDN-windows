@@ -21,6 +21,7 @@
     "@electron-forge/maker-zip": "^7.2.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.2.0",
     "electron": "^28.2.0",
+    "electron-builder": "^24.13.3",
     "electron-installer": "^1.0.3"
   },
   "dependencies": {
@@ -32,5 +33,33 @@
     "querystring": "^0.2.1",
     "request": "^2.88.2",
     "xmlhttprequest": "^1.8.0"
+  },
+  "build": {
+    "appId": "com.okayucdn.desktop",
+    "win": {
+      "target": "nsis",
+      "files": [
+        "index.js",
+        "gui/**/*",
+        "system/**/*",
+        "node_modules/**/*"
+      ],
+      "extraFiles": [
+        {
+          "from": "resources/",
+          "to": "resources",
+          "filter": ["**/*"]
+        }
+      ]
+    },
+    "nsis": {
+        "oneClick": false,
+        "perMachine": false,
+        "allowToChangeInstallationDirectory": true,
+        "include": "build/installer.nsh"
+      },
+    "directories": {
+      "output": "build"
+    }
   }
 }
